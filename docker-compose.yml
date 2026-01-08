@@ -1,0 +1,71 @@
+services:
+
+  auth-db:
+    image: postgres:15
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+
+  mongo-db:
+    image: mongo:7.0
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=auth-db;Database=auth_db;Username=admin;Password=password123
+      - JWT_SECRET=SecretKeyForDev_MustBeLongEnough_12345
+    depends_on:
+      - auth-db
+
+  resource-service:
+    build:
+      context: ./backend/resource-service
+      dockerfile: Dockerfile
+    container_name: resource-service
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__MongoConnection=mongodb://mongo-db:27017
+      - JWT_SECRET=SecretKeyForDev_MustBeLongEnough_12345
+    depends_on:
+      - mongo-db
+      - auth-service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_AUTH_URL=http://localhost:5001
+      - VITE_RESOURCE_URL=http://localhost:5002
+    depends_on:
+      - auth-service
+      - resource-service
+
+volumes:
+  auth_data:
+  mongo_data:

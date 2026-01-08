@@ -1,0 +1,25 @@
+# General
+.DS_Store
+Thumbs.db
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# .NET Core
+bin/
+obj/
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment Variables
+.env
