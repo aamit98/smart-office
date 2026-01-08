@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
     Box, Button, TextField, Typography, Paper, 
     MenuItem, Select, FormControl, InputLabel,
-    Alert, Collapse, InputAdornment, IconButton, CircularProgress
+    Alert, Collapse, InputAdornment, IconButton, CircularProgress, Divider
 } from '@mui/material';
 import { Person, Lock, Visibility, VisibilityOff, AppRegistration, Badge } from '@mui/icons-material';
 import { SmartOfficeLogo } from '../components/SmartOfficeLogo';
@@ -109,11 +109,14 @@ const RegisterPage = observer(() => {
                 }
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Box sx={{ mb: 3 }}>
+                    <Box sx={{ mb: 2 }}>
                         <SmartOfficeLogo color="#1a237e" />
                     </Box>
-                    <Typography component="h1" variant="h5">
-                        Sign Up
+                    <Typography component="h1" variant="h4" sx={{ fontWeight: 800, color: '#2d3748', mb: 1 }}>
+                        Create Account
+                    </Typography>
+                     <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                        Join your company workspace today
                     </Typography>
 
                     <Collapse in={!!errorMessage || !!successMessage} sx={{ width: '100%', mt: 2 }}>
@@ -200,7 +203,7 @@ const RegisterPage = observer(() => {
                         </FormControl>
 
                         <Button
-                            fullWidth variant="contained" sx={{ mt: 3, mb: 2, height: 50 }}
+                            fullWidth variant="contained" sx={{ mt: 3, mb: 3, height: 50, fontWeight: 700, fontSize: '1rem' }}
                             onClick={handleRegister}
                             disabled={isLoading}
                             startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <AppRegistration />}
@@ -208,8 +211,20 @@ const RegisterPage = observer(() => {
                             {isLoading ? "Creating Account..." : "Register"}
                         </Button>
 
-                        <Button fullWidth onClick={() => navigate('/login')}>
-                            Already have an account? Sign In
+                         <Divider sx={{ my: 2 }}>
+                            <Typography variant="caption" color="text.secondary">
+                                ALREADY HAVE AN ACCOUNT?
+                            </Typography>
+                        </Divider>
+
+                        <Button 
+                            fullWidth 
+                            variant="outlined" 
+                            size="large"
+                            onClick={() => navigate('/login')}
+                             sx={{ height: 48, fontWeight: 600 }}
+                        >
+                            Sign In Instead
                         </Button>
                     </Box>
                 </Box>

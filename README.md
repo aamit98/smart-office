@@ -18,6 +18,31 @@ This project implements the requested architecture and endpoints:
 - [x] Frontend with **ReactTS + MobX + MUI 5** and “Add Asset” only for Admin
 - [x] Full portability via `docker-compose up --build`
 - [x] Documentation (Run Guide, Reflections, Tooling Disclosure)
+- [x] **Pagination & Filtering** for large asset lists
+- [x] **Real-world User Identity** (Full Name support in JWT & Bookings)
+- [x] **Admin "Manual Booking"** (Create assets pre-assigned to specific names)
+
+---
+
+## 🌟 New Features Deep Dive
+
+### 1. Pagination & Filtering
+The dashboard is optimized for realistic data volumes:
+- **Backend**: Implemented efficient `Skip` / `Take` logic in `AssetsService`.
+- **Frontend**: Added dynamic MUI Pagination.
+- **Filtering**: Toggle between **"Available"**, **"In Use"**, or **"All"** view modes.
+
+### 2. Enhanced Identity (Full Name)
+To make the system feel "Enterprise Ready":
+- Registration now requires a **Full Name** (e.g., "John Doe") alongside the username.
+- This name is embedded in the **JWT Token** upon login.
+- When a user books a room, their **Real Name** is stored on the asset document.
+- Other users can see exactly *who* is occupying a room (e.g., "Booked by: Jane Smith").
+
+### 3. Admin "Manual Booking" Logic
+Admins have advanced control for setting up demos or reserving VIP spaces:
+- When creating a new asset, if the status is set to **"In Use"**, a generic "Booked For" field appears.
+- This allows Admins to create assets that are already occupied by specific people (e.g., "Reserved for CEO", "Maintenance Team") without needing those users to log in.
 
 ---
 

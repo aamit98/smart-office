@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { useNavigate } from 'react-router-dom';
 import { 
     Box, Button, TextField, Typography, Paper, 
-    Alert, Collapse, InputAdornment, IconButton, CircularProgress
+    Alert, Collapse, InputAdornment, IconButton, CircularProgress, Divider
 } from '@mui/material';
 import { Person, Lock, Visibility, VisibilityOff, Login } from '@mui/icons-material';
 import { SmartOfficeLogo } from '../components/SmartOfficeLogo';
@@ -110,11 +110,14 @@ const LoginPage = observer(() => {
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-                    <Box sx={{ mb: 3 }}>
+                    <Box sx={{ mb: 2 }}>
                         <SmartOfficeLogo color="#1a237e" />
                     </Box>
-                    <Typography component="h1" variant="h5">
-                        Sign In
+                    <Typography component="h1" variant="h4" sx={{ fontWeight: 800, color: '#2d3748', mb: 1 }}>
+                        Welcome Back
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                        Please sign in to access your workspace
                     </Typography>
                     
                     {/* --- Notification Area --- */}
@@ -171,15 +174,28 @@ const LoginPage = observer(() => {
                             }}
                         />
                         <Button
-                            fullWidth variant="contained" size="large" sx={{ mt: 3, mb: 2, height: 48 }}
+                            fullWidth variant="contained" size="large" sx={{ mt: 3, mb: 3, height: 48, fontWeight: 700, fontSize: '1rem' }}
                             onClick={handleSubmit}
                             disabled={isLoading}
                             startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Login />}
                         >
                             {isLoading ? "Signing In..." : "Sign In"}
                         </Button>
-                        <Button fullWidth onClick={() => navigate('/register')}>
-                            Don't have an account? Register
+
+                        <Divider sx={{ my: 2 }}>
+                            <Typography variant="caption" color="text.secondary">
+                                NEW USER?
+                            </Typography>
+                        </Divider>
+
+                        <Button 
+                            fullWidth 
+                            variant="outlined" 
+                            size="large"
+                            onClick={() => navigate('/register')}
+                            sx={{ height: 48, fontWeight: 600 }}
+                        >
+                             Create an Account
                         </Button>
                     </Box>
                 </Box>
