@@ -9,13 +9,14 @@ import { resourceStore } from '../stores/ResourceStore';
 interface Props {
     open: boolean;
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-export const AddAssetDialog = ({ open, onClose }: Props) => {
+export const AddAssetDialog = ({ open, onClose, onSuccess }: Props) => {
     const [name, setName] = useState('');
     const [type, setType] = useState('Room');
     const [description, setDescription] = useState('');
-    // הוספנו סטייט לסטטוס (ברירת מחדל: זמין)
+    // Added state for status (default: Available)
     const [status, setStatus] = useState('Available'); 
     const [error, setError] = useState<string | null>(null);
 
@@ -26,15 +27,18 @@ export const AddAssetDialog = ({ open, onClose }: Props) => {
             name,
             type,
             description,
-            // המרה מהסטרינג לבוליאני שהשרת מצפה לו
+            // Convert string status to boolean expected by server
             isAvailable: status === 'Available'
         });
 
         if (success) {
-            // איפוס הטופס
+            // Reset form
             setName('');
             setDescription('');
             setStatus('Available');
+            if (onSuccess) {
+                onSuccess();
+            }
             onClose(); 
         } else {
             setError("Failed to create asset. Check server connection.");
@@ -42,14 +46,28 @@ export const AddAssetDialog = ({ open, onClose }: Props) => {
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle sx={{ bgcolor: '#f5f5f5', borderBottom: '1px solid #e0e0e0' }}>
+        <Dialog 
+            open={open} 
+            onClose={onClose} 
+            fullWidth 
+            maxWidth="sm"
+            PaperProps={{
+                sx: { borderRadius: 3 }
+            }}
+        >
+            <DialogTitle sx={{ 
+                bgcolor: '#fff', 
+                borderBottom: '1px solid #f0f0f0',
+                fontWeight: 700,
+                color: '#1a237e',
+                py: 3
+            }}>
                 Add New Asset
             </DialogTitle>
-            <DialogContent sx={{ mt: 2 }}>
-                {/* --- התראה בתוך הדיאלוג --- */}
+            <DialogContent sx={{ mt: 3, pb: 4 }}>
+                {/* --- Alert within Dialog --- */}
                 {error && (
-                    <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
+                    <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
                         {error}
                     </Alert>
                 )}
@@ -57,12 +75,13 @@ export const AddAssetDialog = ({ open, onClose }: Props) => {
                 
                 <TextField
                     autoFocus margin="dense" label="Asset Name" fullWidth
-                    placeholder="e.g., Conference Room A"
+                    placeholder="e.g., Main Conference Room"
+                    variant="outlined"
                     value={name} onChange={(e) => setName(e.target.value)}
-                    sx={{ mt: 2 }}
+                    sx={{ mb: 2 }}
                 />
                 
-                {/* שורה אחת לשני השדות: סוג וסטטוס */}
+                {/* Row for two fields: Type and Status */}
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                     <FormControl fullWidth>
                         <InputLabel>Type</InputLabel>
@@ -73,8 +92,12 @@ export const AddAssetDialog = ({ open, onClose }: Props) => {
                         >   
                             <MenuItem value="Room">Room</MenuItem>
                             <MenuItem value="Desk">Desk</MenuItem>
-                            <MenuItem value="Equipment">Equipment</MenuItem>
-                            
+                            <MenuItem value="Laptop">Laptop / Workstation</MenuItem>
+                            <MenuItem value="Projector">Projector</MenuItem>
+                            <MenuItem value="Chair">Ergonomic Chair</MenuItem>
+                            <MenuItem value="Whiteboard">Whiteboard</MenuItem>
+                            <MenuItem value="Parking">Parking Spot</MenuItem>
+                            <MenuItem value="Equipment">Other Equipment</MenuItem>
                         </Select>
                     </FormControl>
 

@@ -32,6 +32,7 @@ public class AuthService : IAuthService
         {
             Id = Guid.NewGuid(),
             Username = request.Username,
+            FullName = request.FullName,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Role = request.Role
         };
@@ -71,10 +72,11 @@ public class AuthService : IAuthService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
+            new Claim("FullName", user.FullName ?? user.Username), // Add FullName claim
             new Claim(ClaimTypes.Role, user.Role)
         };
 
-        // תיקון קטן נוסף: טיפול בשגיאה אם ה-Expiry לא מוגדר בקובץ
+        // Check for token expiry configuration, defaulting to 60 minutes if invalid or missing.
         var expiryMinutesStr = _configuration["JwtSettings:ExpiryInMinutes"] ?? "60";
         if (!double.TryParse(expiryMinutesStr, out var expiryMinutes))
         {
@@ -85,7 +87,7 @@ public class AuthService : IAuthService
             issuer: _configuration["JwtSettings:Issuer"],
             audience: _configuration["JwtSettings:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expiryMinutes), // עדיף UtcNow
+            expires: DateTime.UtcNow.AddMinutes(expiryMinutes), 
             signingCredentials: credentials
         );
 
