@@ -1,26 +1,42 @@
 import { useState } from 'react';
 import { authStore } from '../stores/AuthStore';
 import { observer } from 'mobx-react-lite';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
     Box, Button, TextField, Typography, Paper, 
-    Avatar, MenuItem, Select, FormControl, InputLabel 
+    MenuItem, Select, FormControl, InputLabel,
+    Alert, Collapse 
 } from '@mui/material';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { SmartOfficeLogo } from '../components/SmartOfficeLogo';
 
 const RegisterPage = observer(() => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Member');
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const navigate = useNavigate(); 
 
     const handleRegister = async () => {
-        const success = await authStore.register(username, password, role);
-        if (success) {
-            alert("login successful! please log in.");
-            navigate('/login'); 
+        setErrorMessage(null);
+        setSuccessMessage(null);
+
+        // Validation
+        if (!username || !password) {
+            setErrorMessage("All fields are required.");
+            return;
+        }
+        if (password.length < 6) {
+            setErrorMessage("Password must be at least 6 characters long.");
+            return;
+        }
+
+        const result = await authStore.register(username, password, role);
+        if (result.success) {
+            setSuccessMessage("Registration successful! Redirecting...");
+            setTimeout(() => navigate('/login'), 1500); 
         } else {
-            alert("registration failed, please try again.");
+            setErrorMessage(result.message);
         }
     };
 
@@ -28,21 +44,36 @@ const RegisterPage = observer(() => {
         <Box sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f0f2f5' }}>
             <Paper elevation={10} sx={{ p: 4, width: '100%', maxWidth: 400, borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                        <PersonAddIcon />
-                    </Avatar>
+                    <Box sx={{ mb: 3 }}>
+                        <SmartOfficeLogo color="#1a237e" />
+                    </Box>
                     <Typography component="h1" variant="h5">
                         Sign Up
                     </Typography>
+
+                    <Collapse in={!!errorMessage || !!successMessage} sx={{ width: '100%', mt: 2 }}>
+                        {errorMessage && <Alert severity="error" onClose={() => setErrorMessage(null)}>{errorMessage}</Alert>}
+                        {successMessage && <Alert severity="success">{successMessage}</Alert>}
+                    </Collapse>
                     
                     <Box component="form" sx={{ mt: 1, width: '100%' }}>
                         <TextField
                             margin="normal" required fullWidth label="Username"
-                            value={username} onChange={(e) => setUsername(e.target.value)}
+                            value={username} 
+                            onChange={(e) => {
+                                setUsername(e.target.value);
+                                setErrorMessage(null);
+                            }}
+                            error={!!errorMessage}
                         />
                         <TextField
                             margin="normal" required fullWidth label="Password" type="password"
-                            value={password} onChange={(e) => setPassword(e.target.value)}
+                            value={password} 
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                setErrorMessage(null);
+                            }}
+                            error={!!errorMessage}
                         />
                         
                         <FormControl fullWidth margin="normal">
