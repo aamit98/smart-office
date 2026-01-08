@@ -122,9 +122,16 @@ export const AssetDetailsDialog = observer(({ asset, onClose }: Props) => {
                     <Grid item xs={12}>
                         <Box sx={{ p: 2, bgcolor: asset.isAvailable ? '#f1f8e9' : '#ffebee', borderRadius: 2, border: '1px solid', borderColor: asset.isAvailable ? '#c5e1a5' : '#ffcdd2', display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: asset.isAvailable ? '#4caf50' : '#f44336' }} />
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: asset.isAvailable ? '#33691e' : '#b71c1c' }}>
-                                {asset.isAvailable ? "Available for use" : "Currently in use"}
-                            </Typography>
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: asset.isAvailable ? '#33691e' : '#b71c1c' }}>
+                                    {asset.isAvailable ? "Available for use" : "Currently in use"}
+                                </Typography>
+                                {!asset.isAvailable && (asset.bookedByFullName || asset.bookedBy) && (
+                                    <Typography variant="caption" sx={{ display: 'block', color: '#b71c1c', mt: 0.5 }}>
+                                        Booked by: <strong>{asset.bookedByFullName || asset.bookedBy}</strong>
+                                    </Typography>
+                                )}
+                            </Box>
                         </Box>
                     </Grid>
 

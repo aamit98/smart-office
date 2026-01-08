@@ -32,6 +32,7 @@ public class AuthService : IAuthService
         {
             Id = Guid.NewGuid(),
             Username = request.Username,
+            FullName = request.FullName,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Role = request.Role
         };
@@ -71,6 +72,7 @@ public class AuthService : IAuthService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
+            new Claim("FullName", user.FullName ?? user.Username), // Add FullName claim
             new Claim(ClaimTypes.Role, user.Role)
         };
 

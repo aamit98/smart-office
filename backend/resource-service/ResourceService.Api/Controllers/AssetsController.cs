@@ -77,6 +77,7 @@ public class AssetsController : ControllerBase
         }
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var fullName = User.FindFirst("FullName")?.Value ?? "Unknown User";
         var isAdmin = User.IsInRole("Admin");
 
         // Handle state transitions (Booking vs Releasing)
@@ -84,6 +85,7 @@ public class AssetsController : ControllerBase
         {
             // Asset is being booked: Assign current user as owner
             updatedAsset.BookedBy = userId; 
+            updatedAsset.BookedByFullName = fullName;
         }
         else if (!asset.IsAvailable && updatedAsset.IsAvailable)
         {
@@ -94,12 +96,14 @@ public class AssetsController : ControllerBase
                 return Forbid();
             }
             updatedAsset.BookedBy = null; 
+            updatedAsset.BookedByFullName = null;
         }
         else 
         {
             // No state change detected. Preserve existing ownership unless explicitly modified by Admin.
              if (!isAdmin) {
                  updatedAsset.BookedBy = asset.BookedBy; 
+                 updatedAsset.BookedByFullName = asset.BookedByFullName;
              }
         }
 

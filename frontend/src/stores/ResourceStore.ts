@@ -11,6 +11,7 @@ export interface Asset {
     description: string;
     isAvailable: boolean;
     bookedBy?: string;
+    bookedByFullName?: string;
 }
 
 export interface DashboardStats {

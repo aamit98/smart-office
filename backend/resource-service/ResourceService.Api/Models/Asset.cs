@@ -13,5 +13,6 @@ public class Asset
     public string Type { get; set; } = string.Empty;
     public bool IsAvailable { get; set; } = true;
     public string Description { get; set; } = string.Empty;
-    public string? BookedBy { get; set; } // Stores User ID of the person who booked it
+    public string? BookedBy { get; set; } // Stores User ID
+    public string? BookedByFullName { get; set; } // Stores User Full Name
 }

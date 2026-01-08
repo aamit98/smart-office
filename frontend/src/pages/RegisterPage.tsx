@@ -12,6 +12,7 @@ import { SmartOfficeLogo } from '../components/SmartOfficeLogo';
 
 const RegisterPage = observer(() => {
     const [username, setUsername] = useState('');
+    const [fullName, setFullName] = useState(''); // Added Full Name state
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [role, setRole] = useState('Member');
@@ -26,7 +27,7 @@ const RegisterPage = observer(() => {
         setSuccessMessage(null);
 
         // Validation
-        if (!username || !password) {
+        if (!username || !password || !fullName) { // Validate fullName
             setErrorMessage("All fields are required.");
             return;
         }
@@ -37,7 +38,7 @@ const RegisterPage = observer(() => {
 
         setIsLoading(true);
         try {
-            const result = await authStore.register(username, password, role);
+            const result = await authStore.register(username, fullName, password, role); // Pass fullName
             if (result.success) {
                 setSuccessMessage("Registration successful! Redirecting...");
                 setTimeout(() => navigate('/login'), 1500); 
@@ -133,6 +134,21 @@ const RegisterPage = observer(() => {
                                 startAdornment: (
                                     <InputAdornment position="start">
                                         <Person sx={{ color: 'action.active' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                         <TextField
+                            margin="normal" required fullWidth label="Full Name"
+                            value={fullName}
+                            onChange={(e) => {
+                                setFullName(e.target.value);
+                                setErrorMessage(null);
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Badge sx={{ color: 'action.active' }} />
                                     </InputAdornment>
                                 ),
                             }}

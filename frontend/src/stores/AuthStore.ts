@@ -71,10 +71,10 @@ class AuthStore {
         }
     }
 
-    register = async (username: string, password: string, role: string) => {
+    register = async (username: string, fullName: string, password: string, role: string) => {
         try {
             const response = await axios.post("http://localhost:5001/api/auth/register", { 
-                username, password, role 
+                username, fullName, password, role 
             });
             
             if (response.data && response.data.token) {
