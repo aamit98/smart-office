@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "auth-service", "auth-service", "{0541BE82-B74D-F3FC-5D49-CDC838BFB160}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService.Api", "backend\auth-service\AuthService.Api\AuthService.Api.csproj", "{94C558B3-4574-DB71-6F30-D528C9352E62}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resource-service", "resource-service", "{4F9865F2-B831-D5CA-C761-AFA8B7B819D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourceService.Api", "backend\resource-service\ResourceService.Api\ResourceService.Api.csproj", "{0A716372-10DC-4430-FBC0-91586723325D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{94C558B3-4574-DB71-6F30-D528C9352E62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94C558B3-4574-DB71-6F30-D528C9352E62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94C558B3-4574-DB71-6F30-D528C9352E62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94C558B3-4574-DB71-6F30-D528C9352E62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A716372-10DC-4430-FBC0-91586723325D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A716372-10DC-4430-FBC0-91586723325D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A716372-10DC-4430-FBC0-91586723325D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A716372-10DC-4430-FBC0-91586723325D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0541BE82-B74D-F3FC-5D49-CDC838BFB160} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
+		{94C558B3-4574-DB71-6F30-D528C9352E62} = {0541BE82-B74D-F3FC-5D49-CDC838BFB160}
+		{4F9865F2-B831-D5CA-C761-AFA8B7B819D9} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
+		{0A716372-10DC-4430-FBC0-91586723325D} = {4F9865F2-B831-D5CA-C761-AFA8B7B819D9}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {30CD97ED-486C-4115-94F1-8AC51EE4BAFC}
+	EndGlobalSection
+EndGlobal

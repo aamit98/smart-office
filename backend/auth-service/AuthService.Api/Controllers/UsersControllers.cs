@@ -11,17 +11,18 @@ public class UsersController: ControllerBase
 {
     [Authorize]
     [HttpGet("me")]
-    public IActionResult GetMyProfile(){
-        var username =User.FindFirst(ClaimTypes.Name)?.Value;
+    public IActionResult GetMyProfile()
+    {
+        var username = User.FindFirst(ClaimTypes.Name)?.Value;
         var role = User.FindFirst(ClaimTypes.Role)?.Value;  
-        var id= User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
         return Ok(new 
-                { 
-                    Message = "Welcome to the VIP area!", 
-                    YourUsername = username,
-                    YourRole = role,
-                    YourId = id
-                });
-
+        { 
+            Message = "User profile retrieved successfully.", 
+            YourUsername = username,
+            YourRole = role,
+            YourId = id
+        });
     }
 }

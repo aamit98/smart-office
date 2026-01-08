@@ -7,12 +7,14 @@ interface JwtPayload {
     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
     role?: string;
     unique_name?: string; 
+    sub?: string; // Subject = User ID
     exp: number;
 }
 
 class AuthStore {
     token: string | null = null;
     username: string | null = null;
+    userId: string | null = null;
     role: string | null = null;
     isAuthenticated: boolean = false;
 
@@ -37,6 +39,7 @@ class AuthStore {
             // Handle both standard claim types and short names
             this.role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded.role || null;
             this.username = decoded.unique_name || null;
+            this.userId = decoded.sub || null;
         } catch (e) {
             console.error("Failed to decode token", e);
             this.logout();
@@ -44,11 +47,11 @@ class AuthStore {
     }
 
 
-    // פונקציית עזר לטיפול בשגיאות
+    // Helper function for error handling
     private getErrorMessage(error: unknown): string {
         if (axios.isAxiosError(error)) {
-            // השרת בדרך כלל מחזיר את ההודעה ב-response.data
-            // ב-NET. זה יכול להיות string או אובייקט עם title
+            // The server usually returns the message in response.data
+            // In .NET it can be a string or an object with title
             return error.response?.data?.message || error.response?.data || "Server connection failed";
         }
         return "An unexpected error occurred";
@@ -63,7 +66,7 @@ class AuthStore {
             return { success: true, message: "Welcome back!" };
         } catch (error) {
             console.error("Login failed", error);
-            // מחזירים את השגיאה הספציפית
+            // Return specific error message
             return { success: false, message: "Invalid username or password" }; 
         }
     }
@@ -80,7 +83,7 @@ class AuthStore {
             return { success: true, message: "Registration successful" };
         } catch (error) {
             console.error("Registration failed", error);
-            // כאן השרת (AuthService) יחזיר אם היוזר קיים
+            // The server (AuthService) will return detailed error if user exists
             return { success: false, message: this.getErrorMessage(error) };
         }
     }

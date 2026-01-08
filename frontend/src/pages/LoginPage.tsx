@@ -4,16 +4,19 @@ import { observer } from 'mobx-react-lite';
 import { useNavigate } from 'react-router-dom';
 import { 
     Box, Button, TextField, Typography, Paper, 
-    Alert, Collapse 
+    Alert, Collapse, InputAdornment, IconButton, CircularProgress
 } from '@mui/material';
+import { Person, Lock, Visibility, VisibilityOff, Login } from '@mui/icons-material';
 import { SmartOfficeLogo } from '../components/SmartOfficeLogo';
 
 const LoginPage = observer(() => {
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     
-    // סטייט להודעת השגיאה
+    // State for error message
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -23,6 +26,7 @@ const LoginPage = observer(() => {
     }, [authStore.isAuthenticated, navigate]);
 
     const handleSubmit = async () => {
+        if (isLoading) return;
         setErrorMessage(null);
 
         // Client-side validation
@@ -31,20 +35,81 @@ const LoginPage = observer(() => {
             return;
         }
         
-        // Call the updated function
-        const result = await authStore.login(username, password);
-        
-        if (result.success) {
-            navigate('/dashboard');
-        } else {
-            setErrorMessage(result.message);
+        setIsLoading(true);
+        try {
+            // Call the updated function
+            const result = await authStore.login(username, password);
+            
+            if (result.success) {
+                navigate('/dashboard');
+            } else {
+                setErrorMessage(result.message);
+            }
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <Box sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f0f2f5' }}>
-            <Paper elevation={10} sx={{ p: 4, width: '100%', maxWidth: 400, borderRadius: 2 }}>
+        <Box sx={{ 
+            height: '100vh', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            overflow: 'hidden',
+            position: 'relative'
+        }}>
+            {/* Animated Floating Background Shapes */}
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: '-10%',
+                    right: '-5%',
+                    width: '40%',
+                    height: '40%',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    animation: 'float 6s ease-in-out infinite',
+                    '@keyframes float': {
+                        '0%, 100%': { transform: 'translateY(0px)' },
+                        '50%': { transform: 'translateY(-20px)' },
+                    },
+                }}
+            />
+            <Box
+                sx={{
+                    position: 'absolute',
+                    bottom: '-10%',
+                    left: '-10%',
+                    width: '50%',
+                    height: '50%',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    animation: 'float 8s ease-in-out infinite',
+                    animationDelay: '1s'
+                }}
+            />
+
+            <Paper elevation={0} sx={{ 
+                p: 5, 
+                width: '100%', 
+                maxWidth: 400, 
+                borderRadius: 4, 
+                position: 'relative', 
+                zIndex: 1,
+                bgcolor: 'rgba(255, 255, 255, 0.8)', 
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                animation: 'fadeIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                '@keyframes fadeIn': {
+                    '0%': { opacity: 0, transform: 'translateY(40px)' },
+                    '100%': { opacity: 1, transform: 'translateY(0)' },
+                }
+            }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
                     <Box sx={{ mb: 3 }}>
                         <SmartOfficeLogo color="#1a237e" />
                     </Box>
@@ -52,7 +117,7 @@ const LoginPage = observer(() => {
                         Sign In
                     </Typography>
                     
-                    {/* --- אזור ההתראות --- */}
+                    {/* --- Notification Area --- */}
                     <Collapse in={!!errorMessage} sx={{ width: '100%', mb: 2, mt: 2 }}>
                         <Alert severity="error" onClose={() => setErrorMessage(null)}>
                             {errorMessage}
@@ -66,24 +131,52 @@ const LoginPage = observer(() => {
                             value={username} 
                             onChange={(e) => {
                                 setUsername(e.target.value);
-                                setErrorMessage(null); // מסתיר את השגיאה כשהמשתמש מתחיל להקליד
+                                setErrorMessage(null); // Hide error when user starts typing
                             }} 
-                            error={!!errorMessage} // צובע את המסגרת באדום
+                            error={!!errorMessage} // Highlight border in red on error
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Person sx={{ color: 'action.active' }} />
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
                         <TextField
-                            margin="normal" required fullWidth label="Password" type="password"
+                            margin="normal" required fullWidth label="Password"
+                            type={showPassword ? 'text' : 'password'}
                             value={password} 
                             onChange={(e) => {
                                 setPassword(e.target.value);
                                 setErrorMessage(null);
                             }} 
                             error={!!errorMessage}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Lock sx={{ color: 'action.active' }} />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label="toggle password visibility"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
                         <Button
-                            fullWidth variant="contained" size="large" sx={{ mt: 3, mb: 2 }}
+                            fullWidth variant="contained" size="large" sx={{ mt: 3, mb: 2, height: 48 }}
                             onClick={handleSubmit}
+                            disabled={isLoading}
+                            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Login />}
                         >
-                            Sign In
+                            {isLoading ? "Signing In..." : "Sign In"}
                         </Button>
                         <Button fullWidth onClick={() => navigate('/register')}>
                             Don't have an account? Register
