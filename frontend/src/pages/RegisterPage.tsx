@@ -17,6 +17,7 @@ const RegisterPage = observer(() => {
     const [showPassword, setShowPassword] = useState(false);
     const [role, setRole] = useState('Member');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<{username?: string, fullName?: string, password?: string}>({});
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate(); 
@@ -25,14 +26,21 @@ const RegisterPage = observer(() => {
         if (isLoading) return;
         setErrorMessage(null);
         setSuccessMessage(null);
+        setFieldErrors({});
 
-        // Validation
-        if (!username || !password || !fullName) { // Validate fullName
-            setErrorMessage("All fields are required.");
-            return;
+        let hasError = false;
+        const newErrors: {username?: string, fullName?: string, password?: string} = {};
+
+        if (!username) { newErrors.username = "Username is required"; hasError = true; }
+        if (!fullName) { newErrors.fullName = "Full Name is required"; hasError = true; }
+        if (!password) { 
+            newErrors.password = "Password is required"; hasError = true; 
+        } else if (password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters long"; hasError = true;
         }
-        if (password.length < 6) {
-            setErrorMessage("Password must be at least 6 characters long.");
+
+        if (hasError) {
+            setFieldErrors(newErrors);
             return;
         }
 
@@ -131,8 +139,10 @@ const RegisterPage = observer(() => {
                             onChange={(e) => {
                                 setUsername(e.target.value);
                                 setErrorMessage(null);
+                                setFieldErrors(prev => ({...prev, username: undefined}));
                             }}
-                            error={!!errorMessage}
+                            error={!!fieldErrors.username}
+                            helperText={fieldErrors.username}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
@@ -147,7 +157,10 @@ const RegisterPage = observer(() => {
                             onChange={(e) => {
                                 setFullName(e.target.value);
                                 setErrorMessage(null);
+                                setFieldErrors(prev => ({...prev, fullName: undefined}));
                             }}
+                            error={!!fieldErrors.fullName}
+                            helperText={fieldErrors.fullName}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
@@ -163,8 +176,10 @@ const RegisterPage = observer(() => {
                             onChange={(e) => {
                                 setPassword(e.target.value);
                                 setErrorMessage(null);
+                                setFieldErrors(prev => ({...prev, password: undefined}));
                             }}
-                            error={!!errorMessage}
+                            error={!!fieldErrors.password}
+                            helperText={fieldErrors.password}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
