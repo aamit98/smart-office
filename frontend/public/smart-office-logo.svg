@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Briefcase Icon (#4fc3f7) -->
+  <path fill="#4fc3f7" d="M20,6h-4V4c0-1.11-0.89-2-2-2h-4C8.89,2,8,2.89,8,4v2H4C2.89,6,2.01,6.89,2,8v11c0,1.11,0.89,2,2,2h16c1.11,0,2-0.89,2-2
+	V8C22,6.89,21.11,6,20,6z M14,6h-4V4h4V6z"/>
+  
+  <!-- Bolt Icon (#ffb74d) + Outline/Shadow (#1a237e) -->
+  <!-- We position it at the bottom right, slightly overlapping -->
+  <g transform="translate(6, 4)">
+    <!-- Shadow Effect (Stroke) -->
+    <path fill="#1a237e" d="M11,21l-1-7h4L11,3v9H7L11,21z" stroke="#1a237e" stroke-width="2" stroke-linejoin="round"/>
+    
+    <!-- Main Bolt -->
+    <path fill="#ffb74d" d="M11,21l-1-7h4L11,3v9H7L11,21z"/>
+  </g>
+</svg>

@@ -29,8 +29,12 @@ services:
       - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      # Overriding connection string (localhost -> auth-db)
       - ConnectionStrings__DefaultConnection=Host=auth-db;Database=auth_db;Username=admin;Password=password123
+      # Overriding JWT settings
       - JWT_SECRET=SecretKeyForDev_MustBeLongEnough_12345
+      - JwtSettings__Issuer=SmartOfficeAuth
+      - JwtSettings__Audience=SmartOfficeClient
     depends_on:
       - auth-db
 

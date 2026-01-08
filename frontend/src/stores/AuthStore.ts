@@ -44,38 +44,44 @@ class AuthStore {
     }
 
 
+    // פונקציית עזר לטיפול בשגיאות
+    private getErrorMessage(error: unknown): string {
+        if (axios.isAxiosError(error)) {
+            // השרת בדרך כלל מחזיר את ההודעה ב-response.data
+            // ב-NET. זה יכול להיות string או אובייקט עם title
+            return error.response?.data?.message || error.response?.data || "Server connection failed";
+        }
+        return "An unexpected error occurred";
+    }
+
     login = async (username: string, password: string) => {
         try {
             const response = await axios.post("http://localhost:5001/api/auth/login", { 
                 username, password 
             });
-       
             this.setToken(response.data.token); 
-            return true;
+            return { success: true, message: "Welcome back!" };
         } catch (error) {
             console.error("Login failed", error);
-            return false;
+            // מחזירים את השגיאה הספציפית
+            return { success: false, message: "Invalid username or password" }; 
         }
     }
 
     register = async (username: string, password: string, role: string) => {
         try {
-  
             const response = await axios.post("http://localhost:5001/api/auth/register", { 
-                username, 
-                password,
-                role 
+                username, password, role 
             });
             
-
             if (response.data && response.data.token) {
                 this.setToken(response.data.token);
             }
-            
-            return true;
+            return { success: true, message: "Registration successful" };
         } catch (error) {
             console.error("Registration failed", error);
-            return false;
+            // כאן השרת (AuthService) יחזיר אם היוזר קיים
+            return { success: false, message: this.getErrorMessage(error) };
         }
     }
 

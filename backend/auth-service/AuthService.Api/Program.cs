@@ -94,7 +94,29 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // db.Database.Migrate(); 
+    // Retry logic for database migration
+    var retries = 5;
+    while (retries > 0)
+    {
+        try
+        {
+            Console.WriteLine($"Attempting to connect to database... ({5 - retries + 1}/5)");
+            db.Database.Migrate();
+            Console.WriteLine("Database migration successful!");
+            break;
+        }
+        catch (Exception ex)
+        {
+            retries--;
+            if (retries == 0)
+            {
+                Console.WriteLine($"Migration failed after 5 attempts: {ex.Message}");
+                throw;
+            }
+            Console.WriteLine($"Migration failed: {ex.Message}. Retrying in 5 seconds...");
+            System.Threading.Thread.Sleep(5000);
+        }
+    }
 }
 
 app.UseCors("AllowFrontend");
