@@ -47,10 +47,10 @@ builder.Services.AddScoped<IAuthService, AuthService.Api.Services.AuthService>()
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
-
+// JWT Secret must be provided via environment variable or configuration
 var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
                 ?? jwtSettings["Key"] 
-                ?? "SecretKeyForDev_MustBeLongEnough_12345";
+                ?? throw new InvalidOperationException("JWT_SECRET environment variable or JwtSettings:Key must be configured.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -94,27 +94,20 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // Retry logic for database migration
+    // Retry logic for database migration (container startup race condition)
     var retries = 5;
     while (retries > 0)
     {
         try
         {
-            Console.WriteLine($"Attempting to connect to database... ({5 - retries + 1}/5)");
             db.Database.Migrate();
-            Console.WriteLine("Database migration successful!");
             break;
         }
         catch (Exception ex)
         {
             retries--;
-            if (retries == 0)
-            {
-                Console.WriteLine($"Migration failed after 5 attempts: {ex.Message}");
-                throw;
-            }
-            Console.WriteLine($"Migration failed: {ex.Message}. Retrying in 5 seconds...");
-            System.Threading.Thread.Sleep(5000);
+            if (retries == 0) throw;
+            Thread.Sleep(5000);
         }
     }
 }

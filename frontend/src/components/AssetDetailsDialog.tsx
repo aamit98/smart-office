@@ -67,7 +67,8 @@ export const AssetDetailsDialog = observer(({ asset, onClose }: Props) => {
     };
 
     const isBookedByMe = asset.bookedBy === authStore.userId;
-    const canRelease = isBookedByMe || authStore.role === 'Admin' || !asset.bookedBy;
+    // Permission check: only the booking owner or admin can release an asset
+    const canRelease = isBookedByMe || authStore.isAdmin;
 
     return (
         <>

@@ -1,110 +1,146 @@
 # Smart-Office Asset Manager 🏢
 
-Full Stack home assignment implementation: a containerized asset management system using **.NET 9**, **React (TypeScript)**, and **Docker Compose**.
-
-This solution includes:
-- **Identity & Auth Service** (.NET 9 + PostgreSQL)
-- **Resource Management Service** (.NET 9 + MongoDB)
-- **Frontend Dashboard** (ReactTS + MobX + MUI 5)
-- **RBAC** (Admin / Member) enforced in both UI and backend
+A containerized asset management system using **.NET 9**, **React (TypeScript)**, and **Docker Compose**.
 
 ---
 
-## Assignment Requirements Coverage
-This project implements the requested architecture and endpoints:
-- [x] Auth service with SQL DB and endpoints **POST /register**, **POST /login**
-- [x] Resource service with **different DB type** (MongoDB) + JWT validation
-- [x] Resource endpoints **GET /assets** (all roles), **POST /assets** (Admin only)
-- [x] Frontend with **ReactTS + MobX + MUI 5** and “Add Asset” only for Admin
-- [x] Full portability via `docker-compose up --build`
-- [x] Documentation (Run Guide, Reflections, Tooling Disclosure)
-- [x] **Pagination & Filtering** for large asset lists
-- [x] **Real-world User Identity** (Full Name support in JWT & Bookings)
-- [x] **Admin "Manual Booking"** (Create assets pre-assigned to specific names)
+## ✅ Assignment Requirements
+
+| Requirement | Status | Implementation |
+|-------------|--------|----------------|
+| Two microservices | ✅ | Auth Service + Resource Service |
+| Auth with SQL DB | ✅ | PostgreSQL via EF Core |
+| Resource with different DB | ✅ | MongoDB |
+| JWT with userId + role | ✅ | Claims: `sub`, `role`, `FullName` |
+| POST /register, /login | ✅ | `AuthController.cs` |
+| GET /assets (all roles) | ✅ | Paginated endpoint |
+| POST /assets (Admin only) | ✅ | `[Authorize(Roles="Admin")]` |
+| React + TypeScript + MobX + MUI | ✅ | Frontend stack |
+| docker-compose portability | ✅ | Single command startup |
 
 ---
 
-## 🌟 New Features Deep Dive
+## 🏗 Architecture
 
-### 1. Pagination & Filtering
-The dashboard is optimized for realistic data volumes:
-- **Backend**: Implemented efficient `Skip` / `Take` logic in `AssetsService`.
-- **Frontend**: Added dynamic MUI Pagination.
-- **Filtering**: Toggle between **"Available"**, **"In Use"**, or **"All"** view modes.
+```
+┌─────────────┐     JWT      ┌──────────────────┐
+│   Frontend  │─────────────▶│   Auth Service   │──▶ PostgreSQL
+│  (React)    │              │   (.NET 9)       │
+└──────┬──────┘              └──────────────────┘
+       │ JWT
+       ▼
+┌──────────────────┐
+│ Resource Service │──▶ MongoDB
+│   (.NET 9)       │
+└──────────────────┘
+```
 
-### 2. Enhanced Identity (Full Name)
-To make the system feel "Enterprise Ready":
-- Registration now requires a **Full Name** (e.g., "John Doe") alongside the username.
-- This name is embedded in the **JWT Token** upon login.
-- When a user books a room, their **Real Name** is stored on the asset document.
-- Other users can see exactly *who* is occupying a room (e.g., "Booked by: Jane Smith").
-
-### 3. Admin "Manual Booking" Logic
-Admins have advanced control for setting up demos or reserving VIP spaces:
-- When creating a new asset, if the status is set to **"In Use"**, a generic "Booked For" field appears.
-- This allows Admins to create assets that are already occupied by specific people (e.g., "Reserved for CEO", "Maintenance Team") without needing those users to log in.
-
----
-
-## 🧱 Architecture Overview
-
-**Microservices with strict data isolation**
-- **Auth Service** owns identity data (users, hashed passwords, roles) in **PostgreSQL**.
-- **Resource Service** owns assets data in **MongoDB**.
-- Services do **not** share a database and are deployed together using **Docker Compose**.
-
-**Security model**
-- Auth service issues **JWT** containing: `userId` + `role`.
-- Resource service independently validates the JWT signature and role on every request using a shared secret key.
+- **Auth Service**: User registration, login, JWT generation (BCrypt hashing)
+- **Resource Service**: Asset CRUD, booking logic, statistics
+- **Frontend**: Dashboard with role-based UI (Admin sees "Add Asset" button)
 
 ---
 
 ## 🚀 Run Guide
 
-### Prerequisites
-- Docker Desktop installed + running.
+```bash
+# Start everything
+docker-compose up --build
 
-### Execution
-1. Open a terminal in the root directory.
-2. Build and start the full stack:
-   ```bash
-   docker-compose up --build
-Wait for the services to stabilize.
-
-Access & Testing
-Frontend: http://localhost:5173
-
-Auth Swagger: http://localhost:5001/swagger
-
+# Access points
+Frontend:         http://localhost:5173
+Auth Swagger:     http://localhost:5001/swagger
 Resource Swagger: http://localhost:5002/swagger
+```
 
-Manual Verification Steps:
+### Testing RBAC
+1. Register as **Admin** at `/register`
+2. Register as **Member** (different browser/incognito)
+3. Admin sees "Add New Asset" button; Member does not
 
-Register Admin: Go to /register, create a user, select role Admin.
+---
 
-Register Member: Create another user, select role Member.
+## 📡 API Reference
 
-Verify RBAC:
+### Auth Service (`:5001`)
+| Endpoint | Method | Body | Returns |
+|----------|--------|------|---------|
+| `/api/auth/register` | POST | `{username, password, fullName, role}` | JWT |
+| `/api/auth/login` | POST | `{username, password}` | JWT |
 
-Login as Admin -> You will see the "Add New Asset" button on the dashboard.
+### Resource Service (`:5002`)
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/assets` | GET | Any | Paginated list (`?page=1&pageSize=12`) |
+| `/api/assets/{id}` | GET | Any | Single asset |
+| `/api/assets/stats` | GET | Any | `{total, available, inUse}` |
+| `/api/assets` | POST | Admin | Create asset |
+| `/api/assets/{id}` | PUT | Any | Book/Release (atomic) |
+| `/api/assets/{id}` | DELETE | Admin | Delete asset |
 
-Login as Member -> You will NOT see the "Add New Asset" button.
+---
 
-🧠 Reflections & Challenges
+## 🔧 Technical Decisions
 
-1. Security Considerations (Registration Logic)
-Observation: Currently, the registration endpoint allows any user to self-assign the Admin role.
+### 1. Atomic Booking (Race Condition Fix)
+**Problem**: Two users clicking "Book" simultaneously could both succeed.  
+**Solution**: Implemented `TryBookAssetAsync` using MongoDB's atomic `UpdateOne` with filter `{IsAvailable: true}`. If another user books first, the operation returns `ModifiedCount: 0` → returns `409 Conflict`.
 
+### 2. JWT Secret Configuration
+**Problem**: Hardcoded secrets are a security risk.  
+**Solution**: Removed fallback defaults. App throws `InvalidOperationException` if `JWT_SECRET` env var is missing. This forces proper configuration.
 
-Reflection: While this implementation adheres to the assignment requirements  and facilitates easy testing of RBAC features, in a real-world production environment, this would be a critical vulnerability. Future Fix: Restrict Admin role assignment to database seeding or a dedicated internal CLI tool.
+### 3. Database-Side Pagination
+**Problem**: Loading all assets crashes browser with large datasets.  
+**Solution**: MongoDB `Skip/Limit` before `ToListAsync()` ensures O(1) memory regardless of dataset size.
 
-2. The "Split-Brain" Secret Key Issue
-Problem: Initially, the Auth Service read the JWT Key from appsettings.json while the Resource Service read from Environment Variables. This caused signature validation failures (401 Unauthorized). Solution: Refactored both services to prioritize the JWT_SECRET environment variable injected by docker-compose. This enforces a Single Source of Truth configuration pattern.
+---
 
-3. Docker on Windows Filesystem
-Problem: Encountered archive/tar: unknown file mode errors during build due to Windows file permissions. Solution: Sanitized the Dockerfiles and implemented .dockerignore to exclude local bin/obj folders from the build context.
+## 🧠 Reflections
 
-🛠️ Tooling Disclosure
-AI Assistants: Used for generating boilerplate MUI components and debugging Docker networking configurations.
+### Security: Self-Assigned Admin Role
+The registration endpoint allows role selection for easy testing. In production, this would be restricted to seed scripts or internal tools.
 
-Libraries: BCrypt.Net for hashing, MobX for state management, jwt-decode for client-side claim parsing.
+### Concurrency: Booking Logic
+Previous "read-then-write" pattern had race conditions. Now uses atomic MongoDB updates with conditional filters.
+
+### Configuration: Split-Brain JWT Keys
+Initially, Auth and Resource services read JWT secrets from different sources (appsettings vs env). Fixed by enforcing environment variable as single source of truth.
+
+---
+
+## ✨ Extra Features (Beyond Requirements)
+
+| Feature | Description |
+|---------|-------------|
+| **Pagination** | Server-side `Skip/Limit` pagination with page controls in UI |
+| **Dashboard Statistics** | Live widget counters (Total/Available/In Use) with click-to-filter |
+| **Full Name Display** | JWT includes `FullName` claim; shown in navbar greeting |
+| **Atomic Booking** | Race-condition-safe booking using MongoDB conditional updates |
+| **Admin Pre-Booking** | Admins can create assets as "In Use" with manual name (e.g., "Guest: CEO") |
+| **Glassmorphism UI** | Modern CSS with backdrop blur, gradients, and animations |
+| **Database Seeding** | Auto-seeds 6 demo assets on first startup |
+| **Swagger Documentation** | Both services expose `/swagger` with JWT auth support |
+| **Centralized API Config** | Frontend uses `config/api.ts` with env variable support |
+| **Comprehensive Tests** | Unit tests for AuthService, AssetsController, and RegisterPage |
+
+---
+
+## 🧪 Running Tests
+
+```bash
+# Backend (from project root)
+cd backend/auth-service && dotnet test
+cd backend/resource-service && dotnet test
+
+# Frontend
+cd frontend && npm test
+```
+
+---
+
+## 🛠 Stack
+
+**Backend**: .NET 9, EF Core, MongoDB.Driver, BCrypt.Net  
+**Frontend**: React 19, TypeScript, MobX, MUI v5, Vite  
+**Infrastructure**: Docker Compose, PostgreSQL 15, MongoDB 7
