@@ -81,6 +81,9 @@ public class AssetsController : ControllerBase
         var isAdmin = User.IsInRole("Admin");
 
         // Handle state transitions (Booking vs Releasing)
+        // Note: In a high-concurrency production environment, this check-then-act logic 
+        // could lead to race conditions. A better approach would be atomic DB updates.
+        // For this assignment, we assume optimistic locking is not required.
         if (asset.IsAvailable && !updatedAsset.IsAvailable) 
         {
             // Asset is being booked: Assign current user as owner

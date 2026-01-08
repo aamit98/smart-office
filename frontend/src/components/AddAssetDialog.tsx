@@ -18,17 +18,22 @@ export const AddAssetDialog = ({ open, onClose, onSuccess }: Props) => {
     const [description, setDescription] = useState('');
     // Added state for status (default: Available)
     const [status, setStatus] = useState('Available'); 
+    const [bookedByFullName, setBookedByFullName] = useState(''); // New State for manual booking name
     const [error, setError] = useState<string | null>(null);
 
     const handleSave = async () => {
         setError(null);
+
+        const isAvailable = status === 'Available';
 
         const success = await resourceStore.addAsset({
             name,
             type,
             description,
             // Convert string status to boolean expected by server
-            isAvailable: status === 'Available'
+            isAvailable: isAvailable,
+            // If creating as 'In Use', send the manually entered name
+            bookedByFullName: !isAvailable && bookedByFullName ? bookedByFullName : undefined
         });
 
         if (success) {
@@ -36,6 +41,7 @@ export const AddAssetDialog = ({ open, onClose, onSuccess }: Props) => {
             setName('');
             setDescription('');
             setStatus('Available');
+            setBookedByFullName('');
             if (onSuccess) {
                 onSuccess();
             }
@@ -114,6 +120,17 @@ export const AddAssetDialog = ({ open, onClose, onSuccess }: Props) => {
                         </Select>
                     </FormControl>
                 </Box>
+
+                {/* Show 'Booked For' field only when 'In Use' is selected */}
+                <Collapse in={status === 'In Use'}>
+                    <TextField
+                        margin="dense" label="Booked For (Full Name)" fullWidth
+                        placeholder="e.g., Guest: Elon Musk"
+                        value={bookedByFullName} 
+                        onChange={(e) => setBookedByFullName(e.target.value)}
+                        sx={{ mt: 2 }}
+                    />
+                </Collapse>
 
                 <TextField
                     margin="dense" label="Description" fullWidth multiline rows={3}
