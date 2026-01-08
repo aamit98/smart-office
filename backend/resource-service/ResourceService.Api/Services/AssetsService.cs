@@ -9,13 +9,8 @@ public class AssetsService
 {
     private readonly IMongoCollection<Asset> _assetsCollection;
 
-    public AssetsService(IConfiguration config)
+    public AssetsService(IMongoDatabase mongoDatabase)
     {
-     
-        var connectionString = config.GetConnectionString("MongoConnection");
-        var mongoClient = new MongoClient(connectionString);
-        var mongoDatabase = mongoClient.GetDatabase("SmartOfficeAssetsDB");
-
         _assetsCollection = mongoDatabase.GetCollection<Asset>("Assets");
     }
 
