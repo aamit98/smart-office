@@ -1,8 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import axios from "axios";
 import { authStore } from "./AuthStore";
-
-const API_URL = "http://localhost:5002";
+import { RESOURCE_API_URL } from "../config/api";
 
 export interface Asset {
     id?: string;
@@ -39,7 +38,7 @@ class ResourceStore {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
 
-            let query = `${API_URL}/api/Assets?page=${this.page}&pageSize=${this.pageSize}`;
+            let query = `${RESOURCE_API_URL}/api/Assets?page=${this.page}&pageSize=${this.pageSize}`;
             
             if (this.filter === 'available') {
                 query += '&isAvailable=true';
@@ -49,7 +48,7 @@ class ResourceStore {
 
             // Load assets (paginated)
             const response = await axios.get(query, { headers });
-            const statsResponse = await axios.get(`${API_URL}/api/Assets/stats`, { headers });
+            const statsResponse = await axios.get(`${RESOURCE_API_URL}/api/Assets/stats`, { headers });
             
             runInAction(() => {
                 this.assets = response.data.items;
@@ -59,8 +58,8 @@ class ResourceStore {
                 this.stats = statsResponse.data;
             });
 
-        } catch (error) {
-            console.error('Failed to load assets:', error);
+        } catch {
+            // Network error or server unavailable - keep previous state
         } finally {
             runInAction(() => {
                 this.isLoading = false;
@@ -81,14 +80,13 @@ class ResourceStore {
     
     addAsset = async (asset: Asset) => {
         try {
-            const response = await axios.post("http://localhost:5002/api/Assets", asset, {
+            await axios.post(`${RESOURCE_API_URL}/api/Assets`, asset, {
                 headers: { Authorization: `Bearer ${authStore.token}` }
             });
-            this.loadAssets(); // Refresh list to include new asset
+            this.loadAssets();
             return true;
-        } catch (error) {
-            console.error("Failed to add asset:", error);
-            alert("Only admins can add assets!");
+        } catch {
+            // Server rejected request (likely authorization failure)
             return false;
         }
     }
@@ -97,16 +95,15 @@ class ResourceStore {
         try {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
-            await axios.put(`${API_URL}/api/Assets/${id}`, updatedAsset, { headers });
+            await axios.put(`${RESOURCE_API_URL}/api/Assets/${id}`, updatedAsset, { headers });
             
             // Reload assets to ensure filters are applied correctly (e.g. moving from In Use to Available)
             this.loadAssets();
             
-            // Reload stats to reflect changes
             this.loadStats();
             return true;
-        } catch (error) {
-            console.error("Failed to update asset:", error);
+        } catch {
+            // Update failed (conflict, network error, or unauthorized)
             return false;
         }
     }
@@ -115,27 +112,26 @@ class ResourceStore {
         try {
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
-            await axios.delete(`${API_URL}/api/Assets/${id}`, { headers });
-            this.loadAssets(); // Reload to remove from list
+            await axios.delete(`${RESOURCE_API_URL}/api/Assets/${id}`, { headers });
+            this.loadAssets();
             return true;
-        } catch (error) {
-            console.error("Failed to delete asset:", error);
+        } catch {
+            // Delete failed (asset not found or unauthorized)
             return false;
         }
     }
 
-    // Helper to reload just stats
     loadStats = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_URL}/api/Assets/stats`, { 
+            const response = await axios.get(`${RESOURCE_API_URL}/api/Assets/stats`, { 
                 headers: { Authorization: `Bearer ${token}` } 
             });
             runInAction(() => {
                 this.stats = response.data;
             });
-        } catch (error) {
-            console.error("Failed to load stats:", error);
+        } catch {
+            // Stats unavailable - keep previous values
         }
     }
 }

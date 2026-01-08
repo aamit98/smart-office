@@ -49,7 +49,8 @@ const RegisterPage = observer(() => {
             const result = await authStore.register(username, fullName, password, role); // Pass fullName
             if (result.success) {
                 setSuccessMessage("Registration successful! Redirecting...");
-                setTimeout(() => navigate('/login'), 1500); 
+                // Navigate directly to dashboard (registration auto-authenticates)
+                setTimeout(() => navigate('/dashboard'), 1500); 
             } else {
                 setErrorMessage(result.message);
             }

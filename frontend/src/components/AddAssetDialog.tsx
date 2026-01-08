@@ -30,9 +30,9 @@ export const AddAssetDialog = ({ open, onClose, onSuccess }: Props) => {
             name,
             type,
             description,
-            // Convert string status to boolean expected by server
+            // Map UI string status to API boolean value
             isAvailable: isAvailable,
-            // If creating as 'In Use', send the manually entered name
+            // Admin pre-booking: allows setting a placeholder name for external users
             bookedByFullName: !isAvailable && bookedByFullName ? bookedByFullName : undefined
         });
 

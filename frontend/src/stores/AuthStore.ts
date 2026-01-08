@@ -1,12 +1,14 @@
 import { makeAutoObservable } from "mobx";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { AUTH_API_URL } from "../config/api";
 
 
 interface JwtPayload {
     "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"?: string;
     role?: string;
     unique_name?: string; 
+    FullName?: string; // Custom claim
     sub?: string; // Subject = User ID
     exp: number;
 }
@@ -14,6 +16,7 @@ interface JwtPayload {
 class AuthStore {
     token: string | null = null;
     username: string | null = null;
+    fullName: string | null = null; // Store it
     userId: string | null = null;
     role: string | null = null;
     isAuthenticated: boolean = false;
@@ -26,7 +29,11 @@ class AuthStore {
         }
     }
 
-
+    /**
+     * Decodes a JWT token and updates the store state with user identity and claims.
+     * Handles browser refresh persistence via localStorage.
+     * @param token - The raw JWT string received from the backend
+     */
     setToken(token: string) {
         this.token = token;
         this.isAuthenticated = true;
@@ -34,14 +41,15 @@ class AuthStore {
 
         try {
             const decoded = jwtDecode<JwtPayload>(token);
-            console.log("Decoded Token:", decoded); // For debugging
             
             // Handle both standard claim types and short names
             this.role = decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decoded.role || null;
             this.username = decoded.unique_name || null;
+            // Map the FullName claim
+            this.fullName = decoded.FullName || null;
             this.userId = decoded.sub || null;
-        } catch (e) {
-            console.error("Failed to decode token", e);
+        } catch {
+            // Token is malformed or expired - clear auth state
             this.logout();
         }
     }
@@ -59,21 +67,20 @@ class AuthStore {
 
     login = async (username: string, password: string) => {
         try {
-            const response = await axios.post("http://localhost:5001/api/auth/login", { 
+            const response = await axios.post(`${AUTH_API_URL}/api/auth/login`, { 
                 username, password 
             });
             this.setToken(response.data.token); 
             return { success: true, message: "Welcome back!" };
-        } catch (error) {
-            console.error("Login failed", error);
-            // Return specific error message
+        } catch {
+            // Server rejected credentials - return user-friendly message
             return { success: false, message: "Invalid username or password" }; 
         }
     }
 
     register = async (username: string, fullName: string, password: string, role: string) => {
         try {
-            const response = await axios.post("http://localhost:5001/api/auth/register", { 
+            const response = await axios.post(`${AUTH_API_URL}/api/auth/register`, { 
                 username, fullName, password, role 
             });
             
@@ -82,8 +89,7 @@ class AuthStore {
             }
             return { success: true, message: "Registration successful" };
         } catch (error) {
-            console.error("Registration failed", error);
-            // The server (AuthService) will return detailed error if user exists
+            // Server returned validation error (e.g., username taken)
             return { success: false, message: this.getErrorMessage(error) };
         }
     }

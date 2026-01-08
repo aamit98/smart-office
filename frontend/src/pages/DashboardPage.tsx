@@ -72,7 +72,7 @@ const DashboardPage = observer(() => {
                         <SmartOfficeLogo color="#1a237e" />
                     </Box>
                     <Typography variant="body2" sx={{ mr: 2, fontWeight: 500 }}>
-                        Hello, {authStore.username}
+                        Hello, {authStore.fullName || authStore.username}
                     </Typography>
                     <Button color="inherit" onClick={handleLogout} startIcon={<LogoutIcon />}>
                         Logout
@@ -82,9 +82,10 @@ const DashboardPage = observer(() => {
 
             <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
                 
-                {/* 1. Statistics (Widgets) - Clickable for filtering */}
+                {/* Statistics (Widgets) - Clickable for filtering */}
                 <Grid container spacing={3} sx={{ mb: 4 }}>
                     <Grid size={{ xs: 12, sm: 4 }}>
+                        {/* Total Assets Widget */}
                         <Paper 
                             onClick={() => resourceStore.setFilter('all')}
                             sx={{ 

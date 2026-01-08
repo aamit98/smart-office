@@ -16,8 +16,10 @@ const LoginPage = observer(() => {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     
-    // State for error message
+    // State for error message (Global)
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    // State for field-specific errors
+    const [fieldErrors, setFieldErrors] = useState<{username?: string, password?: string}>({});
 
     useEffect(() => {
         if (authStore.isAuthenticated) {
@@ -28,10 +30,23 @@ const LoginPage = observer(() => {
     const handleSubmit = async () => {
         if (isLoading) return;
         setErrorMessage(null);
+        setFieldErrors({});
+
+        let hasError = false;
+        const newErrors: {username?: string, password?: string} = {};
 
         // Client-side validation
-        if (!username || !password) {
-            setErrorMessage("Please enter both username and password.");
+        if (!username) {
+            newErrors.username = "Username is required";
+            hasError = true;
+        }
+        if (!password) {
+            newErrors.password = "Password is required";
+            hasError = true;
+        }
+        
+        if (hasError) {
+            setFieldErrors(newErrors);
             return;
         }
         
@@ -134,13 +149,15 @@ const LoginPage = observer(() => {
                             value={username} 
                             onChange={(e) => {
                                 setUsername(e.target.value);
-                                setErrorMessage(null); // Hide error when user starts typing
+                                // Clear specific error when typing
+                                if (fieldErrors.username) setFieldErrors({...fieldErrors, username: undefined});
                             }} 
-                            error={!!errorMessage} // Highlight border in red on error
+                            error={!!fieldErrors.username}
+                            helperText={fieldErrors.username}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <Person sx={{ color: 'action.active' }} />
+                                        <Person sx={{ color: fieldErrors.username ? 'error.main' : 'action.active' }} />
                                     </InputAdornment>
                                 ),
                             }}
@@ -151,13 +168,14 @@ const LoginPage = observer(() => {
                             value={password} 
                             onChange={(e) => {
                                 setPassword(e.target.value);
-                                setErrorMessage(null);
-                            }} 
-                            error={!!errorMessage}
+                                if (fieldErrors.password) setFieldErrors({...fieldErrors, password: undefined});
+                            }}
+                            error={!!fieldErrors.password}
+                            helperText={fieldErrors.password}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <Lock sx={{ color: 'action.active' }} />
+                                        <Lock sx={{ color: fieldErrors.password ? 'error.main' : 'action.active' }} />
                                     </InputAdornment>
                                 ),
                                 endAdornment: (

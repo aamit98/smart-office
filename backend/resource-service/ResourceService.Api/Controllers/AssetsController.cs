@@ -80,41 +80,52 @@ public class AssetsController : ControllerBase
         var fullName = User.FindFirst("FullName")?.Value ?? "Unknown User";
         var isAdmin = User.IsInRole("Admin");
 
-        // Handle state transitions (Booking vs Releasing)
-        // Note: In a high-concurrency production environment, this check-then-act logic 
-        // could lead to race conditions. A better approach would be atomic DB updates.
-        // For this assignment, we assume optimistic locking is not required.
+        // Handle state transitions using ATOMIC operations to prevent race conditions
         if (asset.IsAvailable && !updatedAsset.IsAvailable) 
         {
-            // Asset is being booked: Assign current user as owner
-            updatedAsset.BookedBy = userId; 
-            updatedAsset.BookedByFullName = fullName;
+            // Asset is being BOOKED: Use atomic update to prevent double-booking
+            var success = await _assetsService.TryBookAssetAsync(id, userId!, fullName);
+            if (!success)
+            {
+                return Conflict(new { message = "Asset was already booked by another user." });
+            }
+            return NoContent();
         }
         else if (!asset.IsAvailable && updatedAsset.IsAvailable)
         {
-            // Asset is being released: Verify ownership or Admin privileges
-            if (asset.BookedBy != userId && !isAdmin && !string.IsNullOrEmpty(asset.BookedBy))
+            // Asset is being RELEASED: Check permissions first
+            bool isManualBooking = string.IsNullOrEmpty(asset.BookedBy) || asset.BookedBy == "manual";
+
+            if (isManualBooking && !isAdmin)
             {
-                // User is not authorized to release this asset
                 return Forbid();
             }
-            updatedAsset.BookedBy = null; 
-            updatedAsset.BookedByFullName = null;
+            
+            if (!isManualBooking && asset.BookedBy != userId && !isAdmin)
+            {
+                return Forbid();
+            }
+
+            // Admin can release anything; owner can release their own
+            var ownerId = isAdmin ? null : userId;
+            var success = await _assetsService.TryReleaseAssetAsync(id, ownerId);
+            if (!success)
+            {
+                return Conflict(new { message = "Asset state changed. Please refresh." });
+            }
+            return NoContent();
         }
         else 
         {
-            // No state change detected. Preserve existing ownership unless explicitly modified by Admin.
-             if (!isAdmin) {
-                 updatedAsset.BookedBy = asset.BookedBy; 
-                 updatedAsset.BookedByFullName = asset.BookedByFullName;
-             }
+            // No booking state change - regular update (preserve ownership for non-admins)
+            if (!isAdmin) {
+                updatedAsset.BookedBy = asset.BookedBy; 
+                updatedAsset.BookedByFullName = asset.BookedByFullName;
+            }
+            updatedAsset.Id = asset.Id;
+            await _assetsService.UpdateAsync(id, updatedAsset);
+            return NoContent();
         }
-
-        updatedAsset.Id = asset.Id;
-
-        await _assetsService.UpdateAsync(id, updatedAsset);
-
-        return NoContent();
     }
 
     // DELETE: api/assets/{id}

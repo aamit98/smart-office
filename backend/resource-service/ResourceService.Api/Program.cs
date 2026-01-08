@@ -58,7 +58,9 @@ builder.Services.AddCors(options =>
 
 var jwtIssuer = Environment.GetEnvironmentVariable("JwtSettings__Issuer") ?? builder.Configuration["JwtSettings:Issuer"] ?? "SmartOfficeAuth";
 var jwtAudience = Environment.GetEnvironmentVariable("JwtSettings__Audience") ?? builder.Configuration["JwtSettings:Audience"] ?? "SmartOfficeClient";
-var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "SecretKeyForDev_MustBeLongEnough_12345";
+// JWT Secret must be provided via environment variable for token validation
+var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
+                ?? throw new InvalidOperationException("JWT_SECRET environment variable must be configured.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -81,17 +83,15 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Run Seeder
+// Seed demo data on startup
 try 
 {
     var seeder = app.Services.GetRequiredService<DbSeeder>();
     await seeder.SeedAsync();
-    Console.WriteLine("Database Seeding Completed for Landa Digital Printing Demo.");
 }
-catch (Exception ex)
+catch
 {
-    Console.WriteLine($"Seeding failed: {ex.Message}");
-    // Non-critical, continue
+    // Seeding is non-critical; application continues if it fails
 }
 
 app.UseSwagger();

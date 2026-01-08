@@ -28,176 +28,65 @@ public class DbSeeder
 
         var demoAssets = new List<Asset>
         {
-            // === LOCATIONS & ROOMS ===
+            // === MEETINGS ROOMS (High Demand) ===
+            new Asset { Name = "Boardroom Alpha", Type = "Room", Description = "Executive meeting room, 20 seats, 4K Video.", IsAvailable = true },
             new Asset 
             { 
-                Name = "S11 Conference Hall", 
-                Type = "Room", 
-                Description = "Main conference room for B1 format presentations. Located in Rehovot HQ Building A.", 
-                IsAvailable = true 
+                Name = "Creative Lab (Glass)", Type = "Room", Description = "Wall-to-wall whiteboards. Soundproof.", 
+                IsAvailable = false, BookedBy = "u1", BookedByFullName = "David Miller" 
             },
+            new Asset { Name = "Quiet Pod A", Type = "Room", Description = "Single-person booth.", IsAvailable = true },
+            new Asset { Name = "Quiet Pod B", Type = "Room", Description = "Single-person booth.", IsAvailable = true },
             new Asset 
             { 
-                Name = "Nanography Think Tank", 
-                Type = "Room", 
-                Description = "Creative space for R&D. Features whiteboard walls and 7-color ambient lighting. Reserved for Innovation Team.", 
-                IsAvailable = false,
-                BookedBy = "user_benny_id_placeholder" 
-            },
-            new Asset 
-            { 
-                Name = "Sittard Video Link", 
-                Type = "Room", 
-                Description = "High-definition video conference suite optimized for calls with the European manufacturing site.", 
-                IsAvailable = true 
-            },
-            new Asset 
-            { 
-                Name = "Cust. Exp. Center (Lobby)", 
-                Type = "Room", 
-                Description = "Welcome area for VIP customer demonstrations. Includes S10 samples display.", 
-                IsAvailable = true 
-            },
-             new Asset 
-            { 
-                Name = "Quiet Focus Room 302", 
-                Type = "Room", 
-                Description = "Soundproof booth for deep work or private calls. Building B, 3rd Floor.", 
-                IsAvailable = true 
+                Name = "Lecture Hall B", Type = "Room", Description = "Training room with projector. Capacity: 50.", 
+                IsAvailable = false, BookedBy = "u2", BookedByFullName = "Jessica Pearson" 
             },
 
-            // === SPECIALIZED LABS ===
+            // === DESKS (Hot Seating) ===
+            new Asset { Name = "Hot Desk 101", Type = "Desk", Description = "Window seat, dual monitor.", IsAvailable = true },
             new Asset 
             { 
-                Name = "NanoInk Formulation Lab", 
-                Type = "Lab", 
-                Description = "Restricted Access. Equipped for aqueous pigment dispersion testing.", 
-                IsAvailable = false,
-                BookedBy = "chief_chemist_id"
+                Name = "Hot Desk 102", Type = "Desk", Description = "Standard workstation.", 
+                IsAvailable = false, BookedBy = "u3", BookedByFullName = "Joey Tribbiani"
+            },
+            new Asset { Name = "Hot Desk 103", Type = "Desk", Description = "Standing desk.", IsAvailable = true },
+            new Asset { Name = "Hot Desk 104", Type = "Desk", Description = "Near kitchen.", IsAvailable = true },
+            new Asset 
+            { 
+                Name = "Hot Desk 105", Type = "Desk", Description = "Quiet zone.", 
+                IsAvailable = false, BookedBy = "u4", BookedByFullName = "Rachel Green"
             },
             new Asset 
             { 
-                Name = "Substrate Compatibility Lab", 
-                Type = "Lab", 
-                Description = "Testing facility for paper, plastic, and cartonboard compatibility with Nanography.", 
-                IsAvailable = true 
+                Name = "Lead Dev Station", Type = "Desk", Description = "High-performance Linux rig.", 
+                IsAvailable = false, BookedBy = "u5", BookedByFullName = "Chandler Bing"
             },
-            new Asset 
-            { 
-                Name = "Print Quality QA Station", 
-                Type = "Lab", 
-                Description = "Microscope and densitometer setup for inspecting droplet placement accuracy.", 
-                IsAvailable = true 
-            },
+            new Asset { Name = "Intern Desk A", Type = "Desk", Description = "Basic setup.", IsAvailable = true },
+            new Asset { Name = "Intern Desk B", Type = "Desk", Description = "Basic setup.", IsAvailable = true },
 
-            // === WORKSTATIONS ===
+            // === LAPTOPS & EQUIPMENT ===
+            new Asset { Name = "MacBook Pro 16", Type = "Laptop", Description = "M3 Max, 64GB RAM.", IsAvailable = true },
+            new Asset { Name = "Dell XPS 15", Type = "Laptop", Description = "Windows 11, i9.", IsAvailable = true },
             new Asset 
             { 
-                Name = "R&D Desk - Chemistry Lead", 
-                Type = "Desk", 
-                Description = "Dedicated workstation near the formulation lab.", 
-                IsAvailable = true 
+                Name = "Lenovo ThinkPad X1", Type = "Laptop", Description = "Lightweight ultrabook.", 
+                IsAvailable = false, BookedBy = "u6", BookedByFullName = "Ross Geller"
             },
-            new Asset 
-            { 
-                Name = "Print Inspector Station 4", 
-                Type = "Desk", 
-                Description = "High-res monitor Setup for quality assurance of S11P prints.", 
-                IsAvailable = false,
-                BookedBy = "qa_lead_id"
-            },
-             new Asset 
-            { 
-                Name = "Folding Carton Design Station", 
-                Type = "Desk", 
-                Description = "Equipped with CAD tools for packaging structural design.", 
-                IsAvailable = true 
-            },
-            new Asset 
-            { 
-                Name = "Hot Desk - Sales Float", 
-                Type = "Desk", 
-                Description = "Open desk for visiting sales representatives. Plug & Play monitors.", 
-                IsAvailable = true 
-            },
-            new Asset 
-            { 
-                Name = "Intern Cluster - Desk 1", 
-                Type = "Desk", 
-                Description = "Workstation allocated for summer engineering interns.", 
-                IsAvailable = true 
-            },
-
-             // === HIGH-TECH PRINTERS & MACHINES ===
-             new Asset 
-            { 
-                Name = "S11P Prototype (Beta)", 
-                Type = "Printer", 
-                Description = "Double-sided B1 printing unit for internal testing. Handle with care. Status: Online.", 
-                IsAvailable = true 
-            },
-            new Asset 
-            { 
-                Name = "Office Plotter - Wide Format", 
-                Type = "Printer", 
-                Description = "For printing architectural plans and large engineering schematics.", 
-                IsAvailable = false,
-                BookedBy = "engineer_danny"
-            },
-            new Asset 
-            { 
-                Name = "3D Printer - Rapid Prototyping", 
-                Type = "Printer", 
-                Description = "PolyJet printer for creating press parts and components overnight.", 
-                IsAvailable = true 
-            },
-
-            // === EQUIPMENT ===
-            new Asset 
-            { 
-                Name = "Spectrophotometer X-Rite", 
-                Type = "Laptop", 
-                Description = "Portable color measurement device for calibration. Must be signed out.", 
-                IsAvailable = true 
-            },
-            new Asset 
-            { 
-                Name = "Thermal Transfer Simulator", 
-                Type = "Projector", 
-                Description = "Simulates the heated blanket transfer process. Use for training new operators.", 
-                IsAvailable = true 
-            },
-             new Asset 
-            { 
-                Name = "MacBook Pro M3 (Loaner)", 
-                Type = "Laptop", 
-                Description = "High-performance laptop for graphic designers. Asset Tag #LND-992.", 
-                IsAvailable = true 
-            },
+            new Asset { Name = "iPad Pro 12.9", Type = "Laptop", Description = "For design reviews.", IsAvailable = true },
+            new Asset { Name = "4K Portable Projector", Type = "Projector", Description = "Wireless presentation.", IsAvailable = true },
+            new Asset { Name = "VR Headset Set", Type = "Equipment", Description = "Oculus Quest 3 for demo.", IsAvailable = true },
 
             // === PARKING ===
-            new Asset 
-            { 
-                Name = "Visitor Spot A1 (VIP)", 
-                Type = "Parking", 
-                Description = "Reserved for potential S11 customers visiting the demo center.", 
-                IsAvailable = true 
-            },
-            new Asset 
-            { 
-                Name = "EV Charging Station - North", 
-                Type = "Parking", 
-                Description = "Fast charging for electric vehicles. Level 2 Charger.", 
-                IsAvailable = false, 
-                BookedBy = "eco_friendly_employee"
-            },
-            new Asset 
-            { 
-                Name = "Logistics Truck Bay", 
-                Type = "Parking", 
-                Description = "Loading zone for heavy machinery and ink shipments.", 
-                IsAvailable = true 
-            }
+            new Asset { Name = "P-101 (Guest)", Type = "Parking", Description = "Level -1, near elevator.", IsAvailable = true },
+            new Asset { Name = "P-102 (Director)", Type = "Parking", Description = "Reserved.", IsAvailable = false, BookedBy = "manual", BookedByFullName = "Monica Geller" },
+            new Asset { Name = "P-103", Type = "Parking", Description = "Standard spot.", IsAvailable = true },
+            new Asset { Name = "P-104", Type = "Parking", Description = "Standard spot.", IsAvailable = true },
+            new Asset { Name = "P-105 (EV)", Type = "Parking", Description = "Electric Charger available.", IsAvailable = true },
+            
+            // === LAB EQUIPMENT ===
+            new Asset { Name = "3D Printer", Type = "Equipment", Description = "Prusa MK4.", IsAvailable = true },
+            new Asset { Name = "Oscilloscope", Type = "Equipment", Description = "Digital storage.", IsAvailable = false, BookedBy = "u7", BookedByFullName = "Mike Hannigan" }
         };
 
         await _assets.InsertManyAsync(demoAssets);
