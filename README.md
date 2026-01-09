@@ -1,135 +1,165 @@
-# Smart-Office Asset Manager 🏢
+# Smart-Office Asset Manager
 
-A containerized asset management system using **.NET 9**, **React (TypeScript)**, and **Docker Compose**.
+A containerized asset management system for booking office resources: desks, meeting rooms, laptops, and more.
 
----
-
-## ✅ Assignment Requirements
-
-| Requirement | Status | Implementation |
-|-------------|--------|----------------|
-| Two microservices | ✅ | Auth Service + Resource Service |
-| Auth with SQL DB | ✅ | PostgreSQL via EF Core |
-| Resource with different DB | ✅ | MongoDB |
-| JWT with userId + role | ✅ | Claims: `sub`, `role`, `FullName` |
-| POST /register, /login | ✅ | `AuthController.cs` |
-| GET /assets (all roles) | ✅ | Paginated endpoint |
-| POST /assets (Admin only) | ✅ | `[Authorize(Roles="Admin")]` |
-| React + TypeScript + MobX + MUI | ✅ | Frontend stack |
-| docker-compose portability | ✅ | Single command startup |
+**Stack:** .NET 9 | React + TypeScript | MobX | MUI | Docker
 
 ---
 
-## 🏗 Architecture
+## Run the Application
 
-```
-┌─────────────┐     JWT      ┌──────────────────┐
-│   Frontend  │─────────────▶│   Auth Service   │──▶ PostgreSQL
-│  (React)    │              │   (.NET 9)       │
-└──────┬──────┘              └──────────────────┘
-       │ JWT
-       ▼
-┌──────────────────┐
-│ Resource Service │──▶ MongoDB
-│   (.NET 9)       │
-└──────────────────┘
-```
+### Prerequisites
 
-- **Auth Service**: User registration, login, JWT generation (BCrypt hashing)
-- **Resource Service**: Asset CRUD, booking logic, statistics
-- **Frontend**: Dashboard with role-based UI (Admin sees "Add Asset" button)
+Docker Desktop installed and running
 
----
-
-## 🚀 Run Guide
+### Start Everything
 
 ```bash
-# Start everything
-docker-compose up --build
-
-# Access points
-Frontend:         http://localhost:5173
-Auth Swagger:     http://localhost:5001/swagger
-Resource Swagger: http://localhost:5002/swagger
+docker compose up --build
 ```
 
-### Testing RBAC
-1. Register as **Admin** at `/register`
-2. Register as **Member** (different browser/incognito)
-3. Admin sees "Add New Asset" button; Member does not
+Wait for all services to initialize (around 30 to 60 seconds on first run), then open:
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Auth Service Swagger | http://localhost:5001/swagger |
+| Resource Service Swagger | http://localhost:5002/swagger |
 
 ---
 
-## 📡 API Reference
+## Swagger API Testing
 
-### Auth Service (`:5001`)
+Both backend services expose interactive Swagger documentation with JWT Bearer authentication:
+
+### Auth Service (http://localhost:5001/swagger)
+
+- Test registration and login endpoints
+- Copy the returned JWT token for Resource Service testing
+
+### Resource Service (http://localhost:5002/swagger)
+
+- Click "Authorize" button at the top
+- Paste your JWT token (format: `Bearer <your_token>`)
+- Test all asset endpoints with authentication
+
+---
+
+## Test the Role Based Access
+
+1. Open http://localhost:5173
+2. Click Register and create a user with **Admin** role
+3. Open an incognito window and register a **Member** user
+4. Admin sees the "Add New Asset" button
+5. Member does not see it
+
+---
+
+## Architecture
+
+Two isolated microservices sharing only a JWT contract:
+
+```
+┌──────────────────┐
+│     Frontend     │
+│  React + MobX    │
+└────────┬─────────┘
+         │
+    ┌────┴────┐
+    ▼         ▼
+┌────────┐  ┌─────────────┐
+│  Auth  │  │  Resource   │
+│Service │  │  Service    │
+└───┬────┘  └──────┬──────┘
+    │              │
+    ▼              ▼
+┌────────┐  ┌──────────┐
+│Postgres│  │ MongoDB  │
+└────────┘  └──────────┘
+```
+
+### Why different databases?
+
+User credentials need transactional integrity (PostgreSQL). Assets and bookings are document oriented data that benefits from MongoDB's flexible schema and atomic update operators. This separation also demonstrates proper data isolation between services.
+
+---
+
+## API Reference
+
+### Auth Service (Port 5001)
+
+Swagger UI: http://localhost:5001/swagger
+
 | Endpoint | Method | Body | Returns |
 |----------|--------|------|---------|
-| `/api/auth/register` | POST | `{username, password, fullName, role}` | JWT |
-| `/api/auth/login` | POST | `{username, password}` | JWT |
+| `/api/auth/register` | POST | `{ username, password, fullName, role }` | `{ token }` |
+| `/api/auth/login` | POST | `{ username, password }` | `{ token }` |
 
-### Resource Service (`:5002`)
+JWT contains: `sub` (userId), `role` (Admin or Member), `FullName`
+
+### Resource Service (Port 5002)
+
+Swagger UI: http://localhost:5002/swagger
+
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/assets` | GET | Any | Paginated list (`?page=1&pageSize=12`) |
-| `/api/assets/{id}` | GET | Any | Single asset |
-| `/api/assets/stats` | GET | Any | `{total, available, inUse}` |
-| `/api/assets` | POST | Admin | Create asset |
-| `/api/assets/{id}` | PUT | Any | Book/Release (atomic) |
+| `/api/assets` | GET | Any | Paginated list with optional `?isAvailable=true` filter |
+| `/api/assets/{id}` | GET | Any | Single asset details |
+| `/api/assets/stats` | GET | Any | Returns `{ total, available, inUse }` |
+| `/api/assets` | POST | Admin | Create new asset |
+| `/api/assets/{id}` | PUT | Any | Book or release asset |
 | `/api/assets/{id}` | DELETE | Admin | Delete asset |
 
 ---
 
-## 🔧 Technical Decisions
+## Technical Decisions
 
-### 1. Atomic Booking (Race Condition Fix)
-**Problem**: Two users clicking "Book" simultaneously could both succeed.  
-**Solution**: Implemented `TryBookAssetAsync` using MongoDB's atomic `UpdateOne` with filter `{IsAvailable: true}`. If another user books first, the operation returns `ModifiedCount: 0` → returns `409 Conflict`.
+### Atomic Booking (Preventing Race Conditions)
 
-### 2. JWT Secret Configuration
-**Problem**: Hardcoded secrets are a security risk.  
-**Solution**: Removed fallback defaults. App throws `InvalidOperationException` if `JWT_SECRET` env var is missing. This forces proper configuration.
+**Problem:** Two users click "Book" on the same desk simultaneously. A naive read then write could let both succeed.
 
-### 3. Database-Side Pagination
-**Problem**: Loading all assets crashes browser with large datasets.  
-**Solution**: MongoDB `Skip/Limit` before `ToListAsync()` ensures O(1) memory regardless of dataset size.
+**Solution:** MongoDB conditional update. Booking succeeds only if `IsAvailable == true` at write time:
 
----
+```csharp
+var filter = Builders<Asset>.Filter.And(
+    Builders<Asset>.Filter.Eq(a => a.Id, id),
+    Builders<Asset>.Filter.Eq(a => a.IsAvailable, true)
+);
+var result = await _collection.UpdateOneAsync(filter, update);
 
-## 🧠 Reflections
+if (result.ModifiedCount == 0)
+    return null; // 409 Conflict, someone else got it
+```
 
-### Security: Self-Assigned Admin Role
-The registration endpoint allows role selection for easy testing. In production, this would be restricted to seed scripts or internal tools.
+No locks needed. The database guarantees atomicity.
 
-### Concurrency: Booking Logic
-Previous "read-then-write" pattern had race conditions. Now uses atomic MongoDB updates with conditional filters.
+### Server Side Pagination
 
-### Configuration: Split-Brain JWT Keys
-Initially, Auth and Resource services read JWT secrets from different sources (appsettings vs env). Fixed by enforcing environment variable as single source of truth.
+Initially loaded all assets to memory. Fine for 20 items, problematic for 10,000. Fixed by pushing pagination to MongoDB:
 
----
+```csharp
+await _collection.Find(filter)
+    .Skip((page - 1) * pageSize)
+    .Limit(pageSize)
+    .ToListAsync();
+```
 
-## ✨ Extra Features (Beyond Requirements)
+Memory usage stays constant regardless of dataset size.
 
-| Feature | Description |
-|---------|-------------|
-| **Pagination** | Server-side `Skip/Limit` pagination with page controls in UI |
-| **Dashboard Statistics** | Live widget counters (Total/Available/In Use) with click-to-filter |
-| **Full Name Display** | JWT includes `FullName` claim; shown in navbar greeting |
-| **Atomic Booking** | Race-condition-safe booking using MongoDB conditional updates |
-| **Admin Pre-Booking** | Admins can create assets as "In Use" with manual name (e.g., "Guest: CEO") |
-| **Glassmorphism UI** | Modern CSS with backdrop blur, gradients, and animations |
-| **Database Seeding** | Auto-seeds 6 demo assets on first startup |
-| **Swagger Documentation** | Both services expose `/swagger` with JWT auth support |
-| **Centralized API Config** | Frontend uses `config/api.ts` with env variable support |
-| **Comprehensive Tests** | Unit tests for AuthService, AssetsController, and RegisterPage |
+### JWT Secret Consistency
+
+Both services share the same `JWT_SECRET` via environment variables. Auth Service signs tokens; Resource Service validates them. No inter service calls required.
+
+### Role Selection at Registration
+
+Exposed for easy RBAC testing. In production, admin assignment would be handled via seed scripts or internal tooling.
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ```bash
-# Backend (from project root)
+# Backend
 cd backend/auth-service && dotnet test
 cd backend/resource-service && dotnet test
 
@@ -139,8 +169,51 @@ cd frontend && npm test
 
 ---
 
-## 🛠 Stack
+## Extra Features
 
-**Backend**: .NET 9, EF Core, MongoDB.Driver, BCrypt.Net  
-**Frontend**: React 19, TypeScript, MobX, MUI v5, Vite  
-**Infrastructure**: Docker Compose, PostgreSQL 15, MongoDB 7
+| Feature | Purpose |
+|---------|---------|
+| Server side pagination | Stable response times at scale |
+| Clickable dashboard stats | Quick filtering by Total, Available, or In Use |
+| Full name on bookings | Shows who booked the asset, not just an ID |
+| Admin pre booking | Create assets already assigned to guests |
+| Database seeding | Demo data available on first run |
+| Swagger with JWT auth | Test APIs directly in browser |
+
+---
+
+## Project Structure
+
+```
+smart-office/
+├── backend/
+│   ├── auth-service/         # .NET 9 + PostgreSQL
+│   └── resource-service/     # .NET 9 + MongoDB
+├── frontend/                 # React + MobX + MUI
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## Stack
+
+| Layer | Technology |
+|-------|------------|
+| Auth Backend | .NET 9, EF Core, PostgreSQL, BCrypt |
+| Resource Backend | .NET 9, MongoDB.Driver |
+| Frontend | React 19, TypeScript, MobX, MUI 5, Vite |
+| Infrastructure | Docker Compose, PostgreSQL 15, MongoDB 7 |
+
+---
+
+## Tooling Disclosure
+
+I used the following tools during development:
+
+- **ChatGPT** | Brainstormed atomic booking approaches, validated JWT flow design
+- **GitHub Copilot** | Autocomplete for MUI boilerplate and test setup
+- **MongoDB Compass** | Document inspection during debugging
+- **DBeaver** | Verified PostgreSQL migrations
+
+I take full responsibility for this codebase. I understand the JWT validation flow between services, Docker networking, atomic update patterns, and can explain any implementation detail in depth.
